@@ -42,6 +42,11 @@ internal object Preview {
         App.others = listOf(office)
         App.update = app.gokeys.net.Release("1.1.0", "", 0, "")
         MainWindow.snapshot("$dir/3-main-paired.bmp")
+        val many = office.copy(keys = (1..7).map { KeyInfo("m$it", listOf("Volume down", "Volume up", "Mute", "Next song", "Previous", "Play / pause", "Mic mute")[it - 1], if (it % 3 == 0) "" else "Strg+Umschalt+F$it") })
+        App.others = listOf(many)
+        MainWindow.snapshot("$dir/8-main-660.bmp", widthDp = 660)
+        MainWindow.snapshot("$dir/9-main-1000.bmp", widthDp = 1000)
+        App.others = listOf(office)
         Flyout.snapshot("$dir/7-flyout.bmp")
         App.update = null
 

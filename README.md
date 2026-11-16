@@ -3,8 +3,8 @@
 # gokeys
 
 Press saved shortcuts on another PC. Each PC keeps a list of keys like *Volume down = Shift+Ä*. A paired PC presses
-them with its own hotkeys, or from its tray menu. It works for any
-shortcut: volume, media, push-to-talk, anything an app listens for.
+them with its own hotkeys, or from its tray menu. Any shortcut works: volume, media, push-to-talk, anything an app
+listens for.
 
 - **App:** one native Windows exe, built with Kotlin/Native on Win32 directly (no Java). About 6 MB and 20 MB of RAM.
   It lives in the tray.

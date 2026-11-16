@@ -27,6 +27,7 @@ data class Config(
     val paused: Boolean = false,
     val keys: List<OwnKey> = emptyList(),
     val hotkeys: List<Hotkey> = emptyList(),
+    val window: String? = null, // the main window's last size and position: left,top,right,bottom,maximized
 ) {
     fun hotkey(pc: String, key: String) = hotkeys.find { it.pc == pc && it.key == key }
 
@@ -37,6 +38,7 @@ data class Config(
             appendLine("name=$name")
             if (relayUrl != defaultRelay) appendLine("relayUrl=$relayUrl")
             appendLine("paused=$paused")
+            window?.let { appendLine("window=$it") }
             keys.forEach { appendLine("key=${it.id}|${it.shortcut?.encode().orEmpty()}|${it.name}") }
             hotkeys.forEach { appendLine("hotkey=${it.pc}|${it.key}|${it.shortcut.encode()}") }
         })
@@ -68,6 +70,7 @@ data class Config(
                 name = p["name"] ?: defaults.name,
                 relayUrl = p["relayUrl"]?.takeIf { "name" in p } ?: defaults.relayUrl, // the first version always saved one
                 paused = p["paused"] == "true",
+                window = p["window"],
                 keys = all("key").map { (id, s, name) -> OwnKey(id, name, Shortcut.decode(s)) } + legacyKeys(p),
                 hotkeys = all("hotkey").mapNotNull { (pc, key, s) -> Shortcut.decode(s)?.let { Hotkey(pc, key, it) } },
             )

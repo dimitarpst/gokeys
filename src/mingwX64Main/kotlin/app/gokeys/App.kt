@@ -162,6 +162,11 @@ object App : Link.Listener {
 
     // Tray
 
+    /** The main window's size and position, for next time. */
+    fun saveWindow(placement: String) {
+        config = config.copy(window = placement).also(Config::save)
+    }
+
     fun togglePause() {
         change { copy(paused = !paused) }
         connect()
