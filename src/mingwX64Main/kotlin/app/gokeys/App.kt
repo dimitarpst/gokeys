@@ -13,14 +13,19 @@ import app.gokeys.net.Note
 import app.gokeys.net.PcInfo
 import app.gokeys.net.Press
 import app.gokeys.net.Remove
+import app.gokeys.net.Release
 import app.gokeys.net.Room
+import app.gokeys.net.Updates
 import app.gokeys.ui.Flyout
 import app.gokeys.ui.MainWindow
 import app.gokeys.ui.Tray
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The app's state: settings, the room as the relay last described it, and the one live [Link].
@@ -40,6 +45,15 @@ object App : Link.Listener {
     var note: String? = null
         private set
 
+    /** A newer gokeys on GitHub, once a check found one. */
+    var update: Release? = null
+        internal set
+    /** Downloading [update], or why that failed. */
+    var updating = false
+        private set
+    var updateError: String? = null
+        private set
+
     private var link: Link? = null
     private val background = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -52,6 +66,34 @@ object App : Link.Listener {
         }
         connect()
         if (openWindow || firstRun) MainWindow.open()
+        Install.cleanUp()
+        if (Updates.enabled) background.launch {
+            delay(5.seconds)
+            while (true) {
+                runCatching { Updates.latest() }.onSuccess { found -> Tray.post { update = found; refresh() } }
+                delay(6.hours)
+            }
+        }
+    }
+
+    /** Downloads the update, checks it, and runs it; it replaces this copy and reopens the window if it was open. */
+    fun installUpdate() {
+        val release = update ?: return
+        if (updating) return
+        updating = true
+        updateError = null
+        refresh()
+        background.launch {
+            val result = runCatching { Updates.download(release) }
+            Tray.post {
+                result.onSuccess { Install.runUpdate(it, openWindow = MainWindow.isOpen) }
+                result.onFailure {
+                    updating = false
+                    updateError = it.message ?: "The update didn't download. Try again."
+                    refresh()
+                }
+            }
+        }
     }
 
     // This PC's keys

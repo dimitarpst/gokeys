@@ -73,6 +73,12 @@ object Flyout : PaintedWindow("gokeys-flyout", widthDp = 288, maxHeightDp = 600,
             ui.c.roundRect(right - sw - ui.px(14), mid - ui.px(4), right - sw - ui.px(6), mid + ui.px(4), ui.px(4), dot)
         }
 
+        App.update?.let { release ->
+            row("update", { App.installUpdate() }) { top, bottom ->
+                label(if (App.updating) "Updating…" else "Update to ${release.version}", top, bottom, Theme.ACCENT)
+            }
+        }
+
         // Other PCs' keys: click to press now.
         val keys = App.others.flatMap { pc -> pc.keys.map { pc to it } }
         if (keys.isNotEmpty()) separator()

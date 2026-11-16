@@ -4,9 +4,11 @@ import app.gokeys.input.Key
 import app.gokeys.input.Shortcut
 import app.gokeys.net.KeyInfo
 import app.gokeys.net.PcInfo
+import app.gokeys.net.Updates
 import app.gokeys.ui.Flyout
 import app.gokeys.ui.KeyWindow
 import app.gokeys.ui.MainWindow
+import kotlinx.coroutines.runBlocking
 
 /**
  * Debug builds only: GOKEYS_PREVIEW=<folder> paints the windows in a few states to .bmp files.
@@ -14,6 +16,11 @@ import app.gokeys.ui.MainWindow
  */
 internal object Preview {
     fun run(dir: String) {
+        // GOKEYS_UPDATES=<test server>: check, download and verify an update, and say what happened.
+        if (Updates.enabled) return runBlocking {
+            val result = runCatching { Updates.latest()?.let { "found ${it.version} at " + Updates.download(it) } ?: "no update" }
+            Win.writeText("$dir/update.txt", result.getOrElse { "failed: ${it.message}" })
+        }
         val ctrl = Key(0x1D, 0xA2, false)
         val shift = Key(0x2A, 0xA0, false)
         val f9 = Key(0x43, 0x78, false)
@@ -33,8 +40,10 @@ internal object Preview {
         MainWindow.snapshot("$dir/2-main-code.bmp")
         MainWindow.previewPairing(null)
         App.others = listOf(office)
+        App.update = app.gokeys.net.Release("1.1.0", "", 0, "")
         MainWindow.snapshot("$dir/3-main-paired.bmp")
         Flyout.snapshot("$dir/7-flyout.bmp")
+        App.update = null
 
         KeyWindow.preview(KeyWindow.Target.Own(null), held = emptyList(), captured = Shortcut(listOf(ctrl, shift, f9)))
         KeyWindow.snapshot("$dir/4-key-new.bmp")

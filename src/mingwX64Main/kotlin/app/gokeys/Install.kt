@@ -42,15 +42,23 @@ object Install {
                 return true
             }
         }
-        launch(if (openWindow) "" else "--tray")
+        launch(exe, if (openWindow) "" else "--tray")
         return true
     }
 
-    private fun launch(args: String) = memScoped {
+    /** Runs a downloaded update; it asks this copy to quit and takes its place (see [handOff]). */
+    fun runUpdate(path: String, openWindow: Boolean) = launch(path, if (openWindow) "" else "--tray")
+
+    /** Leftovers from the last update, once the installed copy is the one running. */
+    fun cleanUp() {
+        if (isInstalled) DeleteFileW("$dir\\update\\gokeys.exe")
+    }
+
+    private fun launch(exe: String, args: String) = memScoped {
         val startup = alloc<STARTUPINFOW>().apply { cb = sizeOf<STARTUPINFOW>().convert() }
         val process = alloc<PROCESS_INFORMATION>()
         val commandLine = "\"$exe\" $args".wcstr.ptr // CreateProcessW may write to it
-        if (CreateProcessW(exe, commandLine, null, null, FALSE, 0u, null, dir, startup.ptr, process.ptr) != 0) {
+        if (CreateProcessW(exe, commandLine, null, null, FALSE, 0u, null, null, startup.ptr, process.ptr) != 0) {
             CloseHandle(process.hProcess)
             CloseHandle(process.hThread)
         }

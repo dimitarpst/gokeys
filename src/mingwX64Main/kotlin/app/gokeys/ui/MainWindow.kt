@@ -62,6 +62,17 @@ object MainWindow : PaintedWindow("gokeys-main", widthDp = 460, maxHeightDp = 72
             y += ui.px(32)
         }
 
+        App.update?.let { release ->
+            ui.c.roundRect(pad, y, w - pad, y + ui.px(64), ui.px(16), Theme.ACCENT_TINT)
+            val mid = y + ui.px(32)
+            ui.text("gokeys ${release.version} is ready", Fonts.label, Theme.TEXT, pad + ui.px(20), mid - ui.px(20), w - pad - ui.px(140), mid)
+            val detail = App.updateError ?: if (App.updating) "Downloading…" else "You have ${app.gokeys.VERSION}"
+            ui.text(detail, Fonts.small, if (App.updateError != null) Theme.ERROR else Theme.MUTED, pad + ui.px(20), mid, w - pad - ui.px(140), mid + ui.px(18))
+            ui.pill("update", if (App.updating) "Updating…" else "Update", w - pad - ui.px(14), mid - ui.px(16), primary = true,
+                enabled = !App.updating, height = ui.px(32), on = Theme.ACCENT_TINT) { App.installUpdate() }
+            y += ui.px(80)
+        }
+
         // This PC.
         section(ui, App.config.name, "This PC", y)
         ui.pill("add:me", "Add key", w - pad, y, primary = false, height = ui.px(32)) { KeyWindow.addOwn() }

@@ -52,6 +52,37 @@ These environment variables help with debugging:
 - `GOKEYS_PROFILE=b`: a second instance on the same PC, with its own settings.
 - `GOKEYS_RELAY=<url>`: point a build at another relay.
 - `GOKEYS_PREVIEW=<folder>`: debug builds only. Draws the windows to `.bmp` files without opening anything.
+- `GOKEYS_UPDATES=<url>`: debug builds only. Checks a test server instead of GitHub.
+
+## Releases and updates
+
+gokeys checks GitHub Releases shortly after it starts and then every 6 hours. When there's a newer version, the
+window and the tray menu show "gokeys 1.1.0 is ready · Update". Clicking it:
+
+1. downloads `gokeys.exe`,
+2. checks its size and SHA-256 against the digest GitHub publishes,
+3. runs it, which replaces the installed copy.
+
+To publish a release:
+
+1. Raise `version` in `gradle.properties`. It's the only place the version lives.
+2. Build and publish:
+
+```
+gradlew linkReleaseExecutableMingwX64
+gh release create v1.1.0 build/bin/mingwX64/releaseExecutable/gokeys.exe --title "gokeys 1.1.0" --notes "What changed"
+```
+
+The asset must be named exactly `gokeys.exe`, and the tag must be `v` plus the version.
+
+To test the updater against a fake GitHub (no window), run this from the repo root:
+
+```
+node relay/test/update-check.mjs
+```
+
+It checks four cases: a newer release is found and verified, a wrong hash is refused, and older releases and
+pre-releases are ignored.
 
 Branding (the logo, icons and cut-down Roboto) comes from `branding/make-logo.mjs`. Regenerate it with:
 

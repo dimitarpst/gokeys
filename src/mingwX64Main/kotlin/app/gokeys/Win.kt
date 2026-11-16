@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalForeignApi::class)
+@file:OptIn(ExperimentalForeignApi::class, ExperimentalUnsignedTypes::class)
 
 package app.gokeys
 
@@ -37,16 +37,33 @@ internal object Win {
         }
     }
 
-    fun writeText(path: String, text: String) = writeBytes(path, text.encodeToByteArray())
+    fun writeText(path: String, text: String) {
+        writeBytes(path, text.encodeToByteArray())
+    }
 
-    fun writeBytes(path: String, bytes: ByteArray) {
+    /** False if the file couldn't be written in full. */
+    fun writeBytes(path: String, bytes: ByteArray): Boolean {
         val h = CreateFileW(path, GENERIC_WRITE.convert(), 0u, null, CREATE_ALWAYS.convert(), FILE_ATTRIBUTE_NORMAL.convert(), null)
-        if (h == null || h.toLong() == -1L) return
-        memScoped {
+        if (h == null || h.toLong() == -1L) return false
+        val ok = memScoped {
             val written = alloc<UIntVar>()
-            if (bytes.isNotEmpty()) bytes.usePinned { WriteFile(h, it.addressOf(0), bytes.size.convert(), written.ptr, null) }
+            bytes.isEmpty() || bytes.usePinned { WriteFile(h, it.addressOf(0), bytes.size.convert(), written.ptr, null) } != 0 &&
+                written.value.toInt() == bytes.size
         }
         CloseHandle(h)
+        return ok
+    }
+
+    /** SHA-256 as lowercase hex, by Windows' own crypto (bcrypt.dll's one-shot BCryptHash, Windows 10+). */
+    fun sha256(bytes: ByteArray): String? = memScoped {
+        val hash = optional<(COpaquePointer?, CPointer<UByteVar>?, UInt, CPointer<UByteVar>?, UInt, CPointer<UByteVar>?, UInt) -> Int>(
+            "bcrypt.dll", "BCryptHash",
+        ) ?: return null
+        val out = allocArray<UByteVar>(32)
+        val sha256Handle = 0x41L.toCPointer<COpaque>() // BCRYPT_SHA256_ALG_HANDLE
+        val status = bytes.asUByteArray().usePinned { hash(sha256Handle, null, 0u, it.addressOf(0), bytes.size.convert(), out, 32u) }
+        if (status != 0) return null
+        (0 until 32).joinToString("") { out[it].toString(16).padStart(2, '0') }
     }
 
     fun mkdir(path: String) {
