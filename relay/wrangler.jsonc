@@ -1,0 +1,19 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "gokeys-relay",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-09-01",
+	"workers_dev": false,
+	"routes": [{ "pattern": "keys.govrse.app", "custom_domain": true }],
+	"durable_objects": {
+		"bindings": [
+			{ "name": "ROOM", "class_name": "Room" },
+			{ "name": "CODES", "class_name": "Codes" }
+		]
+	},
+	"migrations": [
+		{ "tag": "v1", "new_sqlite_classes": ["Relay"] },
+		{ "tag": "v2", "new_sqlite_classes": ["Room", "Codes"], "deleted_classes": ["Relay"] }
+	],
+	"observability": { "enabled": true }
+}

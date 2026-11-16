@@ -1,0 +1,13 @@
+.gradle
+.kotlin
+build/
+.idea
+*.iml
+local.properties
+# Old builds baked the relay token in from this file: never in git.
+distribution.properties
+
+# relay
+node_modules/
+.wrangler/
+.dev.vars

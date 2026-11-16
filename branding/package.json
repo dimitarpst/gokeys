@@ -1,0 +1,13 @@
+{
+  "name": "gokeys-branding",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "logo": "node make-logo.mjs"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "opentype.js": "1.3.4",
+    "subset-font": "^2.4.0"
+  }
+}
